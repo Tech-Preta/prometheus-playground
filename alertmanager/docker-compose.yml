@@ -1,0 +1,45 @@
+version: '3.2'
+services:
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_TAG}
+    ports:
+    - 9093:9093
+    command:
+    - --config.file=/etc/alertmanager/alertmanager.yml
+    volumes:
+    - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_TAG}
+    ports:
+    - 9090:9090
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+    - ./prometheus:/etc/prometheus:ro
+  amtool:
+    build:
+      context: amtool
+    volumes:
+    - ./amtool/config.yml:/etc/amtool/config.yml:ro
+  hello:
+    build:
+      context: hello
+      args:
+        goPackage: github.com/prometheus-community/prometheus-playground/alertmanager/hello
+        goVersion: 1.11
+      cache_from:
+      - golang:1.11
+      - scratch
+    ports:
+    - 2112:2112
+  webhook:
+    build:
+      context: webhook
+      args:
+        goPackage: github.com/prometheus-community/prometheus-playground/alertmanager/webhook
+        goVersion: 1.11
+      cache_from:
+      - golang:1.11
+      - scratch
+    ports:
+    - 5001:5001
